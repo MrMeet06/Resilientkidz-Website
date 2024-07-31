@@ -113,6 +113,92 @@
 
  <!-- Script Js -->
  <script type="text/javascript" src="js/main.js"></script>
+ </section>
+ <!-- Add this script just before the closing </body> tag or in a separate JS file -->
+ <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+ <script>
+     $(document).ready(function() {
+         // Function to apply filter and set active class
+         function applyFilter(filterValue) {
+             $('#program-flters li').removeClass('filter-active'); // Remove active class from all
+             $('[data-filter="' + filterValue + '"]').addClass('filter-active'); // Add active class to the clicked item
 
+             $('.grid-item').hide(); // Hide all items
+             if (filterValue === '*') {
+                 $('.grid-item').show(); // Show all items
+             } else {
+                 $(filterValue).show(); // Show items that match the filter
+             }
+         }
+
+         // On click of filter button
+         $('#program-flters li').click(function() {
+             var filterValue = $(this).data('filter');
+             applyFilter(filterValue);
+         });
+
+         // Set default filter to 'All' when page loads
+         applyFilter('*');
+     });
+
+     $(document).ready(function() {
+         // Initially hide the popup
+         $(".programs-popup").hide();
+
+         // Event handler for the select program checkboxes
+         $(".select-program-btn").change(function() {
+             var isChecked = $(this).is(":checked");
+             var price = $(this).data("price");
+
+             if (isChecked) {
+                 $("#popup-price").text(price);
+                 $(".programs-popup").slideDown();
+             } else {
+                 $(".programs-popup").slideUp();
+             }
+         });
+
+         // Hide popup when clicking outside of it
+         $(document).click(function(event) {
+             if (!$(event.target).closest('.programs-popup, .select-program-btn').length) {
+                 $(".programs-popup").slideUp();
+             }
+         });
+     });
+ </script>
+ <script>
+     $(document).ready(function() {
+         $("#contactForm").submit(function(event) {
+             event.preventDefault(); // Prevent the form from submitting via the browser
+
+             var formData = {
+                 name: $("#name").val(),
+                 organisation: $("#organisation").val(),
+                 email: $("#email").val(),
+                 phone: $("#phone").val(),
+                 message: $("#message").val()
+             };
+
+             $.ajax({
+                 type: "POST",
+                 url: "submit_contact.php",
+                 data: formData,
+                 dataType: "json",
+                 encode: true,
+                 success: function(data) {
+                     if (data.status === "success") {
+                         alert(data.message);
+                         $("#contactForm")[0].reset(); // Clear the form
+                     } else {
+                         alert(data.message);
+                     }
+                 },
+                 error: function() {
+                     alert("There was an error submitting the form.");
+                 }
+             });
+         });
+     });
+ </script>
  </body>
  </html>

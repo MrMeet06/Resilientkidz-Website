@@ -211,7 +211,6 @@ ul li:before, ul li:before {
 	content: "";
 	width: 6px;
 	height: 6px;
-	background-color: #000;
 	position: absolute;
 	left: 0px;
 	top: 8px;
@@ -3851,16 +3850,21 @@ left: 4px;
 	margin-bottom: 30px;
 	margin-top: 26px;
 }
-.controlls ul {
+
+.controlls ul#program-flters {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	justify-content: center;
 	margin: 0;
+	padding: 0;
+	list-style-type: none;
+	/* Remove bullet points */
 }
-.controlls ul li {
+
+.controlls ul#program-flters li {
 	margin: 4px 6px;
-	padding: 10px 26px 10px 26px;
+	padding: 10px 26px;
 	text-transform: uppercase;
 	font-weight: 600;
 	cursor: pointer;
@@ -3869,23 +3873,14 @@ left: 4px;
 	font-size: 16px;
 	border: 2px solid #2d87e1;
 	border-radius: 60px;
-	-webkit-border-radius: 60px;
-	-moz-border-radius: 60px;
-	-ms-border-radius: 60px;
-	-o-border-radius: 60px;
-	-webkit-transition: all .4s ease-in-out;
-	-moz-transition: all .4s ease-in-out;
-	-o-transition: all .4s ease-in-out;
-	-ms-transition: all .4s ease-in-out;
 	transition: all .4s ease-in-out;
 }
-.controlls ul li:hover, .controlls ul li.active {
+
+.controlls ul#program-flters li:hover,
+.controlls ul#program-flters li.filter-active {
 	background-color: #fa555a;
+	list-style-type: none;
 	color: #FFFFFF;
-	border-color: #fa555a
-}
-.controlls ul li:before {
-	display: none
 }
 /********************* Programs Detail Page CSS *********************/
 

@@ -1,38 +1,25 @@
 <?php include 'header.php'; ?>
-<?php include 'blogdata.php'; // This should contain the logic to connect to your database 
-?>
+<?php include 'blogdata.php'; ?>
 
 <?php
-// Get the Blog ID from the URL
 if (isset($_GET['id'])) {
-    $blog_id = $_GET['id'];
+    $blog_id = intval($_GET['id']);
 
-    // Check if the database connection is successful
     if ($conn === false) {
         die("ERROR: Could not connect. " . mysqli_connect_error());
     }
 
-    // Prepare the SQL statement
     $stmt = $conn->prepare("SELECT * FROM blog WHERE id = ?");
-
-    // Check if the prepare statement was successful
     if ($stmt === false) {
         die("ERROR: Could not prepare query: " . $conn->error);
     }
-
-    // Bind the parameters
     $stmt->bind_param("i", $blog_id);
-
-    // Execute the statement
     $stmt->execute();
-
-    // Get the result
     $result = $stmt->get_result();
     $blog_post = $result->fetch_assoc();
 }
 ?>
 
-<!-- Hero Section Start -->
 <div class="page-inner-header top-zigzag-bg blue programs-page-hero">
     <div class="container" data-aos="fade-up" data-aos-duration="1000">
         <h1><?php echo htmlspecialchars($blog_post['title']); ?></h1>
@@ -43,14 +30,13 @@ if (isset($_GET['id'])) {
         </ol>
     </div>
 </div>
-<!-- Hero Section End -->
 
 <section class="inner-content-section p-0">
     <div class="programs-list-section blog-single-section">
         <div class="container" data-aos="fade-up" data-aos-duration="1000">
             <div class="small-container">
                 <div class="blog-single-col blog-col-8">
-                    <div class="blog-single ">
+                    <div class="blog-single">
                         <div class="top-author">
                             <p>
                                 <img src="images/<?php echo htmlspecialchars($blog_post['image']); ?>" alt="<?php echo htmlspecialchars($blog_post['title']); ?>" class="aligncenter" width="100%" height="auto">
@@ -65,9 +51,14 @@ if (isset($_GET['id'])) {
                 <!-- Comments Section -->
                 <div class="comments-section">
                     <h5>Comments</h5>
-                    <?php include 'comments.php'; ?>
+                    <?php
+                    // Pass the blog_id as a GET parameter to comments.php to fetch the comments
+                    $blog_id = isset($blog_id) ? $blog_id : 0;
+                    include 'comments.php';
+                    ?>
                 </div>
 
+                <!-- Comment Form -->
                 <div class="post-comment">
                     <div class="post-comment-section">
                         <div class="contact-main-section-inner">
@@ -76,6 +67,7 @@ if (isset($_GET['id'])) {
                                     <form id="comment-form" class="comment-form form-main" method="POST" novalidate>
                                         <input type="hidden" name="blog_id" value="<?php echo $blog_id; ?>">
                                         <div class="row">
+                                            <!-- Form fields remain the same -->
                                             <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                                                 <div class="post-comment-title single-comment-title">Leave a Comment</div>
                                             </div>
@@ -135,34 +127,23 @@ if (isset($_GET['id'])) {
         $('#comment-form').on('submit', function(e) {
             e.preventDefault();
 
-            // Validate form fields
-            var name = $('#name').val().trim();
-            var email = $('#email1').val().trim();
-            var message = $('#message').val().trim();
-
-            if (name === '' || email === '' || message === '') {
-                alert('Please fill in all required fields.');
-                return;
-            }
-
-            // Validate email format
-            var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailPattern.test(email)) {
-                alert('Please enter a valid email address.');
-                return;
-            }
-
-            // Proceed with AJAX submission
             $.ajax({
                 type: 'POST',
-                url: 'submit_comment.php',
+                url: 'comments.php', // The same file handles submission and fetching
                 data: $(this).serialize(),
                 dataType: 'json',
                 success: function(response) {
                     if (response.status === 'success') {
-                        $('.comments').append(response.html);
+                        // Append the new comment to the top of the comment list
+                        $('.comments').prepend(response.html);
+                        // Update the comment count
+                        var commentCount = parseInt($('.comment-main-title').text().match(/\d+/)) + 1;
+                        $('.comment-main-title').text('Comments (' + commentCount + ')');
+                        // Reset the form
                         $('#comment-form')[0].reset();
                         alert('Comment added successfully!');
+                        // Remove "No comments yet" message if it exists
+                        $('.no-comments-message').remove();
                     } else {
                         alert('Error: ' + response.message);
                     }

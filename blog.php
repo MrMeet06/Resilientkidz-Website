@@ -29,18 +29,13 @@
                             include 'config.php';
 
                             $sql = "SELECT blog.title, blog.short_description, blog.created_at, blog.id, blog.image, category.name AS category_name 
-                                FROM blog
-                                JOIN category ON blog.category_id = category.id";
+                                    FROM blog
+                                    JOIN category ON blog.category_id = category.id";
                             $result = $conn->query($sql);
-
-
 
                             if ($result->num_rows > 0) {
                                 while ($row = $result->fetch_assoc()) {
                                     $imageSrc = isset($row["image"]) && !empty($row["image"]) ? '/phpwork/projectwork/images/' . $row["image"] : '/phpwork/projectwork/images/program-img1.jpg';
-
-                                    // Debug: Output the image path
-                                    echo '<!-- Debug: Image path: ' . htmlspecialchars($imageSrc) . ' -->';
 
                                     echo '<div class="col-md-4" data-aos="fade-up" data-aos-duration="1000">';
                                     echo '  <div class="article-block">';
@@ -49,7 +44,19 @@
                                     echo '          <div class="other-info">';
                                     echo '              <ul>';
                                     echo '                  <li class="date">' . date('d M Y', strtotime($row["created_at"])) . '</li>';
-                                    echo '                  <li class="comments"><a href="#" title="Comments">Comments <strong>(05)</strong></a></li>';
+                                    echo '                  <li class="comments"><a href="#" title="Comments">Comments <strong>';
+
+                                    // Fetch the number of comments for this blog post
+                                    $blog_id = $row["id"];
+                                    $comment_sql = "SELECT COUNT(*) AS comment_count FROM comments WHERE blog_id = $blog_id";
+                                    $comment_result = $conn->query($comment_sql);
+                                    if ($comment_result) {
+                                        $comment_row = $comment_result->fetch_assoc();
+                                        echo $comment_row['comment_count'];
+                                    } else {
+                                        echo 0;
+                                    }
+                                    echo '</strong></a></li>';
                                     echo '              </ul>';
                                     echo '          </div>';
                                     echo '          <h2><a href="blog-single.php?id=' . htmlspecialchars($row["id"]) . '" title="">' . htmlspecialchars($row["title"]) . '</a></h2>';
