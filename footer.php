@@ -168,37 +168,48 @@
  </script>
  <script>
      $(document).ready(function() {
-         $("#contactForm").submit(function(event) {
-             event.preventDefault(); // Prevent the form from submitting via the browser
+         // Check URL parameters
+         const urlParams = new URLSearchParams(window.location.search);
+         if (urlParams.has('success')) {
+             // Show success message
+             $('#success-message').fadeIn().delay(2000).fadeOut();
 
-             var formData = {
-                 name: $("#name").val(),
-                 organisation: $("#organisation").val(),
-                 email: $("#email").val(),
-                 phone: $("#phone").val(),
-                 message: $("#message").val()
-             };
-
-             $.ajax({
-                 type: "POST",
-                 url: "submit_contact.php",
-                 data: formData,
-                 dataType: "json",
-                 encode: true,
-                 success: function(data) {
-                     if (data.status === "success") {
-                         alert(data.message);
-                         $("#contactForm")[0].reset(); // Clear the form
-                     } else {
-                         alert(data.message);
-                     }
-                 },
-                 error: function() {
-                     alert("There was an error submitting the form.");
-                 }
-             });
-         });
+             // Remove the 'success' parameter from the URL
+             urlParams.delete('success');
+             window.history.replaceState({}, document.title, window.location.pathname + '?' + urlParams.toString());
+         }
      });
  </script>
+ <script>
+     function handleFormSubmit(event) {
+         event.preventDefault();
+         const form = document.getElementById('categoryForm');
+         const formData = new FormData(form);
+         fetch(form.action, {
+                 method: form.method,
+                 body: formData,
+             })
+             .then(response => response.json())
+             .then(data => {
+                 if (data.status === 'success') {
+                     const tableBody = document.getElementById('categoryTableBody');
+                     const newRow = document.createElement('tr');
+                     newRow.innerHTML = `
+                        <td>${data.id}</td>
+                        <td>${data.name}</td>
+                        <td>${data.created_at}</td>
+                    `;
+                     tableBody.prepend(newRow);
+                     form.reset();
+                 } else {
+                     alert('Failed to add category: ' + data.message);
+                 }
+             })
+             .catch(error => console.error('Error:', error));
+     }
+ </script>
+ <!-- Include JavaScript File -->
+ <script src="js/comments.js"></script>
  </body>
+
  </html>

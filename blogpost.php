@@ -1,5 +1,5 @@
 <?php
-include 'config.php';
+include 'functions.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $category_id = isset($_POST['category_id']) ? $_POST['category_id'] : '';
@@ -8,38 +8,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $short_description = isset($_POST['short_description']) ? $_POST['short_description'] : '';
     $status = isset($_POST['status']) ? $_POST['status'] : 'draft';
 
-    // Handle file upload
-    $image = '';
-    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-        $image = basename($_FILES['image']['name']);
-        $target_path = '/var/www/html/phpwork/projectwork/images/' . $image;
-        if (move_uploaded_file($_FILES['image']['tmp_name'], $target_path)) {
-            echo '<div class="alert alert-success">Image uploaded successfully.</div>';
-        } else {
-            echo '<div class="alert alert-danger">Failed to upload image.</div>';
-        }
-    }
-    if (!empty($title) && !empty($description)) {
-        try {
-            echo $sql = "INSERT INTO blog (category_id, title, description, short_description, status, image, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())";
-            
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("isssss", $category_id, $title, $description, $short_description, $status, $image);
-            $stmt->execute()
-            or trigger_error($stmt->error, E_USER_ERROR);
-            $stmt->close();
-            echo '<div class="alert alert-success">Blog post added successfully.</div>';
-        } catch(PDOException $e) {
-           echo "Error: " . $e->getMessage();
-           exit();
-        }
+    $image = uploadImage(); // Handle file upload
 
+    if (empty($image)) {
+        $image = ''; // If upload fails, set image to an empty string
+    }
+
+    if (!empty($title) && !empty($description)) {
+        $result = insertBlogPost($category_id, $title, $description, $short_description, $status, $image);
+        echo '<div class="alert alert-' . ($result['status'] === 'success' ? 'success' : 'danger') . '">' . $result['message'] . '</div>';
     } else {
         echo '<div class="alert alert-danger">All fields are required.</div>';
     }
 }
 
-$conn->close();
+$posts = fetchAllBlogPosts();
 ?>
 
 <!DOCTYPE html>
@@ -98,23 +81,16 @@ $conn->close();
             <button type="submit" class="btn btn-primary">Add Blog Post</button>
         </form>
         <?php
-        include 'config.php';
-        $sql = "SELECT blog.id, blog.title, blog.created_at, blog.image, category.name AS category_name
-                FROM blog
-                JOIN category ON blog.category_id = category.id";
-        $result = $conn->query($sql); 
-
-        if ($result->num_rows > 0) {
+        if (!empty($posts)) {
             echo '<table class="table table-bordered mt-5"><thead class="thead-dark"><tr><th>ID</th><th>Title</th><th>Category</th><th>Created At</th><th>Image</th></tr></thead><tbody>';
-            while ($row = $result->fetch_assoc()) {
-                $imageSrc = !empty($row["image"]) ? '/phpwork/projectwork/images/' . $row["image"] : '/phpwork/projectwork/images/program-img1.jpg';
-                echo '<tr><td>' . htmlspecialchars($row["id"]) . '</td><td>' . htmlspecialchars($row["title"]) . '</td><td>' . htmlspecialchars($row["category_name"]) . '</td><td>' . htmlspecialchars($row["created_at"]) . '</td><td><img src="' . htmlspecialchars($imageSrc) . '" alt="Image" style="width:100px;"></td></tr>';
+            foreach ($posts as $post) {
+                $imageSrc = !empty($post["image"]) ? '/phpwork/projectwork/images/' . $post["image"] : '/phpwork/projectwork/images/program-img1.jpg';
+                echo '<tr><td>' . htmlspecialchars($post["id"]) . '</td><td>' . htmlspecialchars($post["title"]) . '</td><td>' . htmlspecialchars($post["category_name"]) . '</td><td>' . htmlspecialchars($post["created_at"]) . '</td><td><img src="' . htmlspecialchars($imageSrc) . '" alt="Image" style="width:100px;"></td></tr>';
             }
             echo '</tbody></table>';
         } else {
             echo '<div class="alert alert-info">No blog posts found.</div>';
         }
-        $conn->close();
         ?>
     </div>
     <footer class="footer mt-auto py-3 bg-light">

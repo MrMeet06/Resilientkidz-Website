@@ -1,23 +1,17 @@
 <?php
-
 include 'header.php';
-include 'config.php'; // This should handle database connection
+include 'functions.php'; // Includes functions for category management
 
-// Handle form submission to add a new category
+// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = $_POST['name'];
-    $stmt = $conn->prepare("INSERT INTO category (name) VALUES (?)");
-    $stmt->bind_param("s", $name);
-    $stmt->execute();
-    $id = $stmt->insert_id;
-    $created_at = date('Y-m-d H:i:s');
-    echo json_encode(['id' => $id, 'name' => $name, 'created_at' => $created_at]);
+    $name = $_POST['name'] ?? '';
+    $result = addCategory($name);
+    echo json_encode($result);
     exit();
 }
 
-// Fetch all categories from the database
-$sql = "SELECT * FROM category ORDER BY created_at DESC";
-$result = $conn->query($sql);
+// Fetch all categories
+$categories = fetchCategories();
 ?>
 
 <div class="container mt-5">
@@ -42,14 +36,14 @@ $result = $conn->query($sql);
         <tbody id="categoryTableBody">
             <?php
             $id = 1;
-            if ($result->num_rows > 0) :
-                while ($row = $result->fetch_assoc()) : ?>
+            if (!empty($categories)) :
+                foreach ($categories as $category) : ?>
                     <tr>
                         <td><?= htmlspecialchars($id++) ?></td>
-                        <td><?= htmlspecialchars($row['name']) ?></td>
-                        <td><?= htmlspecialchars($row['created_at']) ?></td>
+                        <td><?= htmlspecialchars($category['name']) ?></td>
+                        <td><?= htmlspecialchars($category['created_at']) ?></td>
                     </tr>
-                <?php endwhile;
+                <?php endforeach;
             else : ?>
                 <tr>
                     <td colspan="3" class="text-center">No categories found</td>
@@ -60,34 +54,4 @@ $result = $conn->query($sql);
 </div>
 
 <iframe name="hiddenIframe" style="display:none;"></iframe>
-
-<script>
-    function handleFormSubmit(event) {
-        event.preventDefault();
-        const form = document.getElementById('categoryForm');
-        const formData = new FormData(form);
-        fetch(form.action, {
-                method: form.method,
-                body: formData,
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.id && data.name && data.created_at) {
-                    const tableBody = document.getElementById('categoryTableBody');
-                    const newRow = document.createElement('tr');
-                    newRow.innerHTML = `
-                    <td>${data.id}</td>
-                    <td>${data.name}</td>
-                    <td>${data.created_at}</td>
-                `;
-                    tableBody.prepend(newRow);
-                    form.reset();
-                } else {
-                    alert('Failed to add category');
-                }
-            })
-            .catch(error => console.error('Error:', error));
-    }
-</script>
-
 <?php include 'footer.php'; ?>

@@ -2,48 +2,74 @@
 // Include database configuration
 include 'config.php';
 
-// Check if form is submitted
+// Function to sanitize input data
+function sanitizeInput($data)
+{
+    return htmlspecialchars(trim($data));
+}
+
+// Function to validate email format
+function validateEmail($email)
+{
+    return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+}
+
+// Function to validate phone number format
+function validatePhoneNumber($phonenumber)
+{
+    return preg_match("/^[0-9]{10}$/", $phonenumber);
+}
+
+// Function to insert user data into the database
+function insertUserData($conn, $fullname, $email, $password, $phonenumber, $date)
+{
+    $sql = "INSERT INTO user (name, email, password, phonenumber, date) VALUES (?, ?, ?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+
+    if ($stmt === false) {
+        throw new Exception("Prepare failed: " . htmlspecialchars($conn->error));
+    }
+
+    $result = $stmt->bind_param("sssss", $fullname, $email, $password, $phonenumber, $date);
+    if ($result === false) {
+        throw new Exception("Bind failed: " . htmlspecialchars($stmt->error));
+    }
+
+    if (!$stmt->execute()) {
+        throw new Exception("Execute failed: " . htmlspecialchars($stmt->error));
+    }
+
+    $stmt->close();
+}
+
+// Main logic
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $fullname = isset($_POST['fullname']) ? $_POST['fullname'] : '';
-    $email = isset($_POST['email']) ? $_POST['email'] : '';
-    $password = isset($_POST['password']) ? password_hash($_POST['password'], PASSWORD_BCRYPT) : '';
-    $phonenumber = isset($_POST['phonenumber']) ? $_POST['phonenumber'] : '';
-    $date = isset($_POST['date']) ? $_POST['date'] : '';
+    $fullname = isset($_POST['fullname']) ? sanitizeInput($_POST['fullname']) : '';
+    $email = isset($_POST['email']) ? sanitizeInput($_POST['email']) : '';
+    $password = isset($_POST['password']) ? password_hash(sanitizeInput($_POST['password']), PASSWORD_BCRYPT) : '';
+    $phonenumber = isset($_POST['phonenumber']) ? sanitizeInput($_POST['phonenumber']) : '';
+    $date = isset($_POST['date']) ? sanitizeInput($_POST['date']) : '';
 
-    // Debugging information
-    echo "Full Name: " . htmlspecialchars($fullname) . "<br>";
-    echo "Email: " . htmlspecialchars($email) . "<br>";
-    echo "Phone Number: " . htmlspecialchars($phonenumber) . "<br>";
-    echo "Date: " . htmlspecialchars($date) . "<br>";
-
-    // Check if any required fields are empty
     if (empty($fullname) || empty($email) || empty($password) || empty($phonenumber) || empty($date)) {
         die("All fields are required.");
     }
 
-    // Prepare and bind
-    $sql = "INSERT INTO user (name, email, password, phonenumber, date) VALUES (?, ?, ?, ?, ?)";
-    $stmtinsert = $conn->prepare($sql);
-
-    if ($stmtinsert === false) {
-        die("Prepare failed: " . htmlspecialchars($conn->error));
+    if (!validateEmail($email)) {
+        die("Invalid email format.");
     }
 
-    $result = $stmtinsert->bind_param("sssss", $fullname, $email, $password, $phonenumber, $date);
-
-    if ($result === false) {
-        die("Bind failed: " . htmlspecialchars($stmtinsert->error));
+    if (!validatePhoneNumber($phonenumber)) {
+        die("Invalid phone number format. It should be 10 digits.");
     }
 
-    if ($stmtinsert->execute()) {
-        echo 'Successfully saved.';
-    } else {
-        die("Execute failed: " . htmlspecialchars($stmtinsert->error));
+    try {
+        insertUserData($conn, $fullname, $email, $password, $phonenumber, $date);
+        // Redirect to home page with a success query parameter
+        header("Location: index.php?status=success");
+        exit();
+    } catch (Exception $e) {
+        echo "Error: " . $e->getMessage();
     }
-
-    $stmtinsert->close();
-} else {
-    echo "No data";
 }
 
 $conn->close();

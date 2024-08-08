@@ -26,9 +26,11 @@
                 <div class="col-md-12 col-lg-7">
                     <div class="contact-form-container">
                         <!-- Success Message Placeholder -->
-                        <div id="success-message" style="display:none; color:green; font-weight:bold; text-align:left;">
-                            Your message has been sent successfully!
-                        </div>
+                        <?php if (isset($_GET['success']) && $_GET['success'] === 'true') : ?>
+                            <div id="success-message" style="color:green; font-weight:bold; text-align:left;">
+                                Your message has been sent successfully!
+                            </div>
+                        <?php endif; ?>
                         <div class="section-title" data-aos="fade-up" data-aos-duration="1000">
                             <h4>Write To Us.....</h4>
                             <p>….about your queries, concerns, feedback. We are all ears.</p>
@@ -99,16 +101,5 @@
     <!-- Map Section End -->
 
 </section>
-
-<script>
-    $(document).ready(function() {
-        // Check URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('success')) {
-            // Show success message
-            $('#success-message').fadeIn().delay(2000).fadeOut();
-        }
-    });
-</script>
 
 <?php include 'footer.php'; ?>

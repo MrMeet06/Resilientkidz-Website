@@ -1,6 +1,6 @@
 <?php
 include 'header.php';
-include 'config.php'; // Database connection
+include 'functions.php';
 ?>
 
 <!-- Hero Section Start -->
@@ -27,31 +27,22 @@ include 'config.php'; // Database connection
                 <ul id="program-flters">
                     <li data-filter="*" class="filter-active">All</li>
                     <?php
-                    $cat_list = "SELECT * FROM `category2`";
-                    $cat_result = mysqli_query($conn, $cat_list);
-                    if ($cat_result->num_rows > 0) {
-                        while ($cat_data = $cat_result->fetch_assoc()) {
+                    $categories = getCategories();
+                    foreach ($categories as $cat_data) {
                     ?>
-                            <li data-filter=".<?php echo strtolower(str_replace(' ', '-', $cat_data['name'])); ?>"><?php echo $cat_data['name']; ?></li>
+                        <li data-filter=".<?php echo strtolower(str_replace(' ', '-', $cat_data['name'])); ?>"><?php echo $cat_data['name']; ?></li>
                     <?php
-                        }
                     }
                     ?>
                 </ul>
             </div>
             <div class="row program-filter" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="150">
                 <?php
-                $program_sql = "SELECT * FROM `programs`";
-                $program_result = mysqli_query($conn, $program_sql);
-
-                if ($program_result->num_rows > 0) {
-                    while ($program_data = $program_result->fetch_assoc()) {
-                        $category2 =  $program_data['category2'];
-                        $category2_sql = "SELECT * FROM `category2` WHERE `id`='$category2'";
-                        $category2_result = mysqli_query($conn, $category2_sql);
-                        $category2_data = mysqli_fetch_assoc($category2_result);
+                $programs = getPrograms();
+                if (!empty($programs)) {
+                    foreach ($programs as $program_data) {
                 ?>
-                        <div class="col-md-6 col-lg-4 grid-item <?php echo strtolower(str_replace(' ', '-', $category2_data['name'])); ?>">
+                        <div class="col-md-6 col-lg-4 grid-item <?php echo strtolower(str_replace(' ', '-', $program_data['category_name'])); ?>">
                             <div class="program-block">
                                 <div class="program-thumb"><img src="<?php echo $program_data['image']; ?>" alt="Program Image"></div>
                                 <div class="program-info">
@@ -66,7 +57,7 @@ include 'config.php'; // Database connection
                                             </li>
                                             <li>
                                                 <div class="label">Duration</div>
-                                                <div class="duration"><?php echo $category2_data['name']; ?></div>
+                                                <div class="duration"><?php echo $program_data['category_name']; ?></div>
                                             </li>
                                         </ul>
                                     </div>
